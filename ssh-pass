@@ -1,0 +1,38 @@
+#!/bin/bash
+
+. /usr/local/etc/pass.conf
+
+# Usage
+if [ $# -eq 0 ] || [ $1 == "-h" ] || [ $1 == "--help" ]; then
+  echo "Usage: ${0##*/} <hostname>"
+  echo "Hot tip: ${0##*/} has bash completion, so simply tab away!"
+  exit
+fi
+
+HOST=`echo $1 | cut -d/ -f2`
+USER="vdi"
+PREFIX=""
+PASS=`pass ${PREFIX}${1}`
+SSH_ASKPASS_SCRIPT=`mktemp`
+
+# Create temporary passfile
+cat > ${SSH_ASKPASS_SCRIPT} <<EOL
+#!/bin/bash
+echo "${PASS}"
+EOL
+chmod u+x ${SSH_ASKPASS_SCRIPT}
+
+# Set no display, necessary for ssh to play nice with setsid and SSH_ASKPASS.
+export DISPLAY=:0
+
+export SSH_ASKPASS=${SSH_ASKPASS_SCRIPT}
+
+SSH_OPTIONS="-oLogLevel=error"
+#SSH_OPTIONS="${SSH_OPTIONS} -oStrictHostKeyChecking=no"
+#SSH_OPTIONS="${SSH_OPTIONS} -oUserKnownHostsFile=/dev/null"
+
+# Execute ssh through setsid
+setsid ssh ${SSH_OPTIONS} ${USER}@${HOST}
+
+rm -f $SSH_ASKPASS_SCRIPT
+
