@@ -121,7 +121,7 @@ If you are less conserned about the insecurity of using poor randomness, the qui
     sudo apt-get install rng-tools
     sudo rngd -r /dev/urandom
 
-And voila!, lots of poorly psudo random bytes to choose from. But hey, it works!
+And voila!, lots of poorly pseudo random bytes to choose from. But hey, it works!
 
 [1]: http://www.passwordstore.org/
 [2]: https://github.com/toringe/multi-pass#setting-up-a-local-git-server
