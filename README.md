@@ -16,7 +16,7 @@ You can install `pass` from the Ubuntu repositories, but it's a bit outdated. Th
     cd password-store*
     sudo make install
 
-You'll need a git server that will host the common GPG keyring and the common password-store. If you don't have an existing git server you can use, I've included basic documentation below. 
+You'll need a git server that will host the common GPG keyring and the common password-store. If you don't have an existing git server you can use, I've included basic documentation [below][2]. 
 
 
 Once the git server is configured, you're ready to install the multi-user scripts.
@@ -44,7 +44,7 @@ The first user has to initialize the password store and some other init stuff. S
 
 The script will pause, then you, or someone with access, will need to add your ssh identity file to the `authorized_keys` file of the user running the git repository, so that you can push changes without having to enter your ssh password. When this has been done, the initial user need to press ENTER to continue the installation. The next and final step is to enter your own personal password that will be used to get access to the common password-store. 
 
-NB! On idle servers, especially virtual ones, it may take considerable time to get enough entropy for the GPG key generation to complete. If this is the case, you may want to read the section "Quick fix to increase entropy" at the end of this document. Don't terminate the key generation, just open a new terminal and follow the quick fix steps.
+NB! On idle servers, especially virtual ones, it may take considerable time to get enough entropy for the GPG key generation to complete. If this is the case, you may want to read the section "[Quick fix to increase entropy][3]" at the end of this document. Don't terminate the key generation, just open a new terminal and follow the quick fix steps.
 
 Before any more users are added, you should populate the password-store with at least one entry. A new password can easily be generate:
 
@@ -124,3 +124,5 @@ If you are less conserned about the insecurity of using poor randomness, the is 
 And voila!, lots of poorly psudo random bytes to choose from.
 
 [1]: http://www.passwordstore.org/
+[2]: https://github.com/toringe/multi-pass#setting-up-a-local-git-server
+[3]: https://github.com/toringe/multi-pass#quick-fix-to-increase-entropy
