@@ -1,7 +1,7 @@
 Multi-user password-store
 =========================
 
-This is a mulit-user version of Pass - the standard unix password manager ([passwordstore.org][1]). It's a series of scripts that facilitate mulit-user (even on mulitple machines) access to one common password store. Each user will have his/her own password to access the store. New users can register for access by themselves, but an existing authorized user need to approve the registration before access is granted. Pass is already using GnuPG and Git, so this multi-user version simply builds on that.  
+This is a multi-user version of Pass - the standard unix password manager ([passwordstore.org][1]). It's a series of scripts that facilitate multi-user (even on multiple machines) access to one common password store. Each user will have his/her own password to access the store. New users can register for access by themselves, but an existing authorized user need to approve the registration before access is granted. Pass is already using GnuPG and Git, so this multi-user version simply builds on that.  
 
 
 System prerequisites
