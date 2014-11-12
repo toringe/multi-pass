@@ -1,18 +1,37 @@
 #!/bin/bash
+################################################################################
+#                                                                              #
+# ssh-pass: Openssh-client wrapper that uses password-store to retrieve the    #
+# --------  login password for the specified host. The username is either      #
+#           specified in the pass entry, pass.conf or the current user.        #
+#                                                                              #
+# Author: Tor Inge Skaar                                                       #
+#                                                                              #
+################################################################################
 
 . /usr/local/etc/pass.conf
 
 # Usage
-if [ $# -eq 0 ] || [ $1 == "-h" ] || [ $1 == "--help" ]; then
+if [ $# -eq 0 ] || [ ${1} == "-h" ] || [ ${1} == "--help" ]; then
   echo "Usage: ${0##*/} <hostname>"
   echo "Hot tip: ${0##*/} has bash completion, so simply tab away!"
   exit
 fi
 
-HOST=`echo $1 | cut -d/ -f2`
-USER="vdi"
-PREFIX=""
-PASS=`pass ${PREFIX}${1}`
+# Get hostname from input arguments
+HOST=$1
+
+# Determine to override USER 
+if [ `pass ${HOST} | grep -ic "user="` -eq 1 ]; then
+  # USER specified as option in pass store entry
+  USER=`pass ${HOST} | grep -i "user=" | cut -d= -f2`
+elif [ -n "$SSHUSER" ]; then
+  # USER specified in pass.conf
+  USER=$SSHUSER
+fi
+
+# Get password for host
+PASS=`pass ${HOST} | head -n 1`
 SSH_ASKPASS_SCRIPT=`mktemp`
 
 # Create temporary passfile
@@ -28,11 +47,12 @@ export DISPLAY=:0
 export SSH_ASKPASS=${SSH_ASKPASS_SCRIPT}
 
 SSH_OPTIONS="-oLogLevel=error"
-#SSH_OPTIONS="${SSH_OPTIONS} -oStrictHostKeyChecking=no"
-#SSH_OPTIONS="${SSH_OPTIONS} -oUserKnownHostsFile=/dev/null"
+SSH_OPTIONS="${SSH_OPTIONS} -oStrictHostKeyChecking=no"
+SSH_OPTIONS="${SSH_OPTIONS} -oUserKnownHostsFile=/dev/null"
 
 # Execute ssh through setsid
 setsid ssh ${SSH_OPTIONS} ${USER}@${HOST}
 
+# Remote temporary passfile
 rm -f $SSH_ASKPASS_SCRIPT
 

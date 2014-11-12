@@ -47,6 +47,7 @@ sudo cp $basedir/ssh-pass $BINDIR
 
 # Set proper permissions
 sudo chmod 755 $BINDIR/pass-*
+sudo chmod 755 $BINDIR/ssh-pass
 sudo chmod 644 $BINDIR/pass-common-func.sh
 sudo chmod 644 $CONFDIR/pass.conf
 sudo chmod 644 $CONFDIR/profile-gpg-addition
