@@ -46,7 +46,7 @@ The script will pause, then you, or someone with access, will need to add your s
 
 NB! On idle servers, especially virtual ones, it may take considerable time to get enough entropy for the GPG key generation to complete. If this is the case, you may want to read the section "[Quick fix to increase entropy][3]" at the end of this document. Don't terminate the key generation, just open a new terminal and follow the quick fix steps.
 
-Before any more users are added, you should populate the password-store with at least one entry. A new password can easily be generate:
+Before any more users are added, you should populate the password-store with at least one entry. A new password can easily be generated:
 
     pass generate <hostname> <num>
 
@@ -74,17 +74,17 @@ and observe that the password store has been populated with the current configur
 
     pass <hostname>
 
-In this setting, where you use the password store for passwords of different remote machines, you normally use it together with ssh. That's why I've added a ssh-wrapper to multi-pass, which uses pass transparently and with tab completion for the hostnames store in the password-store.
+In this setting, where you use the password store for passwords of different remote machines, you normally use it together with ssh. That's why I've added a ssh-wrapper to multi-pass, which uses pass transparently and with tab completion for the hostnames stored in the password-store.
 
     ssh-pass <hostname>
 
-Type in your gpg password once (given that gpg-agent is working as it should) and hit TAB to access all valid hostnames based on your partial input. `ssh-pass` will then use the long and awkward password stored without you even noticing it.
+Type in your gpg password once (given that gpg-agent is working as it should) and it will use the long and awkward password stored without you even noticing it.
 
 
 Setting up a local git server
 -----------------------------
 
-If you don't happen to have an existing git server, here is the basic documentation for getting a get server up and running on the same machine as you install multi-pass.
+If you don't happen to have an existing git server, here is the basic documentation for getting a git server up and running on the same machine as you install multi-pass.
 
     sudo adduser --shell $(which git-shell) --gecos '' --disabled-password git
     sudo mkdir -p /home/git/.ssh
@@ -116,12 +116,12 @@ Quick fix to increase entropy
 
 Your system has run out of random bytes, and waits for the entropy to increase. This is a usual case for servers with no special hardware, and even more so for virtual servers. On a desktop, the kernel will seed its entropy from i/o sources like keyboard and mouse, in addition to disk and network, and usually have more "available" randomness. 
 
-If you are less conserned about the insecurity of using poor randomness, the is a quick fix for this:
+If you are less conserned about the insecurity of using poor randomness, the quick fix is:
 
     sudo apt-get install rng-tools
     sudo rngd -r /dev/urandom
 
-And voila!, lots of poorly psudo random bytes to choose from.
+And voila!, lots of poorly psudo random bytes to choose from. But hey, it works!
 
 [1]: http://www.passwordstore.org/
 [2]: https://github.com/toringe/multi-pass#setting-up-a-local-git-server
