@@ -42,8 +42,8 @@ else
   echo "Seems like GPG-Agent is already added to your profile"
 fi
 
-if [ -r $HOME/.ssh/id_rsa ]; then
-  echo "Identity file already exists"
+if [ -r $HOME/.ssh/id_git_pass ]; then
+  echo "Identity file for Git already exists"
 else
   echo "Generating SSH keys for Git-server access"
   ssh-keygen -b 2048 -t rsa -f $HOME/.ssh/id_git_pass -q -N ""
