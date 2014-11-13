@@ -37,13 +37,13 @@ basedir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # Copy file to their install paths
 sudo cp $basedir/pass.conf $CONFDIR
 sudo cp $basedir/profile-gpg-addition $CONFDIR
-sudo cp $basedir/pass-new-user $BINDIR
-sudo cp $basedir/pass-accept-user $BINDIR
-sudo cp $basedir/pass-del-user $BINDIR
-sudo cp $basedir/pass-sync $BINDIR
+sudo cp $basedir/pass-new-user.sh $BINDIR/pass-new-user
+sudo cp $basedir/pass-accept-user.sh $BINDIR/pass-accept-user
+sudo cp $basedir/pass-del-user.sh $BINDIR/pass-del-user
+sudo cp $basedir/pass-sync.sh $BINDIR/pass-sync
 sudo cp $basedir/pass-common-func.sh $BINDIR
-sudo cp $basedir/ssh-pass.completion /etc/bash_completion.d/ssh-pass
-sudo cp $basedir/ssh-pass $BINDIR
+sudo cp $basedir/ssh-pass.completion.sh /etc/bash_completion.d/ssh-pass
+sudo cp $basedir/ssh-pass.sh $BINDIR/ssh-pass
 
 # Set proper permissions
 sudo chmod 755 $BINDIR/pass-*
