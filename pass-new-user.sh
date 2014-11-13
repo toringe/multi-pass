@@ -46,8 +46,28 @@ if [ -r $HOME/.ssh/id_rsa ]; then
   echo "Identity file already exists"
 else
   echo "Generating SSH keys for Git-server access"
-  ssh-keygen -b 2048 -t rsa -f $HOME/.ssh/id_rsa -q -N ""
+  ssh-keygen -b 2048 -t rsa -f $HOME/.ssh/id_git_pass -q -N ""
   check $? "ssh-keygen failed to generate keys"
+fi
+
+addconfig=0
+test -r $HOME/.ssh/config
+if [ $? -ne 0 ]; then
+  touch $HOME/.ssh/config
+  addconfig=1
+fi
+if [ `grep -c "id_git_pass" $HOME/.ssh/config` -eq 0 ]; then
+  addconfig=1
+fi
+if [ $addconfig -eq 1 ]; then
+cat >> $HOME/.ssh/config <<EOL
+Host $GITSERVER
+ HostName $GITSERVER
+ User git
+ IdentityFile $HOME/.ssh/id_git_pass
+ IdentitiesOnly yes
+EOL
+echo "Add Git identity to .ssh/config"
 fi
 
 ssh -q -o PasswordAuthentication=no -o StrictHostKeyChecking=no $GITUSER@$GITSERVER list > /dev/null
@@ -59,7 +79,7 @@ if [ $? -ne 0 ]; then
   echo "  $GITUSER@$GITSERVER "
   echo
   echo "  have to add your identity file:"
-  echo "  ${HOME}/.ssh/id_rsa.pub "
+  echo "  ${HOME}/.ssh/id_git_pass.pub "
   echo
   echo "  to the $GITUSER user's ~/.ssh/authorized_keys file"
   echo
