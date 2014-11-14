@@ -32,8 +32,7 @@ fi
 
 # Get password for host
 PASS=`pass ${HOST} | head -n 1`
-#SSH_ASKPASS_SCRIPT=`mktemp`
-SSH_ASKPASS_SCRIPT="/tmp/askpass.sh"
+SSH_ASKPASS_SCRIPT=`mktemp`
 
 # Create a self-destructing temporary SSH_ASKPASS script
 cat > ${SSH_ASKPASS_SCRIPT} <<EOL
@@ -49,8 +48,8 @@ export DISPLAY=:0
 export SSH_ASKPASS=${SSH_ASKPASS_SCRIPT}
 
 SSH_OPTIONS="-oLogLevel=error"
-SSH_OPTIONS="${SSH_OPTIONS} -oStrictHostKeyChecking=no"
-SSH_OPTIONS="${SSH_OPTIONS} -oUserKnownHostsFile=/dev/null"
+#SSH_OPTIONS="${SSH_OPTIONS} -oStrictHostKeyChecking=no"
+#SSH_OPTIONS="${SSH_OPTIONS} -oUserKnownHostsFile=/dev/null"
 
 # Execute ssh through setsid and fork to background
 setsid ssh ${SSH_OPTIONS} ${USER}@${HOST} 
