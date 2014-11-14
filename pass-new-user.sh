@@ -70,7 +70,7 @@ EOL
 echo "Add Git identity to .ssh/config"
 fi
 
-ssh -q -o PasswordAuthentication=no -o StrictHostKeyChecking=no $GITUSER@$GITSERVER list > /dev/null
+ssh -q -o BatchMode=yes $GITUSER@$GITSERVER list > /dev/null
 if [ $? -ne 0 ]; then
   echo
   echo " ***********************************************************************"
@@ -88,13 +88,13 @@ if [ $? -ne 0 ]; then
   echo " ***********************************************************************"
   read -p ""
 
-  ssh -q -o PasswordAuthentication=no -o StrictHostKeyChecking=no $GITUSER@$GITSERVER list > /dev/null
+  ssh -q -o BatchMode=yes $GITUSER@$GITSERVER list > /dev/null
   if [ $? -ne 0 ]; then
     echo "Your identity has not yet been added to $GITUSER@$GITSERVER"
     echo "Maybe you hit enter too quickly :)"
     read -p "Type \"yes\" when you _know_ your identity has been added: " answer
     if [ "${answer,,}" = "yes" ]; then
-      ssh -q -o PasswordAuthentication=no -o StrictHostKeyChecking=no $GITUSER@$GITSERVER list > /dev/null
+      ssh -q -o BatchMode=yes $GITUSER@$GITSERVER list > /dev/null
       check $? "Nope! Still doesn't work. Get it fixed and then re-run this script"
     fi
   fi
