@@ -70,7 +70,9 @@ EOL
 echo "Add Git identity to .ssh/config"
 fi
 
-ssh -q -o BatchMode=yes $GITUSER@$GITSERVER list > /dev/null
+sshtest="ssh -q -o PasswordAuthentication=no -o StrictHostKeyChecking=no $GITUSER@$GITSERVER list > /dev/null"
+
+eval $sshtest
 if [ $? -ne 0 ]; then
   echo
   echo " ***********************************************************************"
@@ -88,13 +90,13 @@ if [ $? -ne 0 ]; then
   echo " ***********************************************************************"
   read -p ""
 
-  ssh -q -o BatchMode=yes $GITUSER@$GITSERVER list > /dev/null
+  eval $sshtest
   if [ $? -ne 0 ]; then
     echo "Your identity has not yet been added to $GITUSER@$GITSERVER"
     echo "Maybe you hit enter too quickly :)"
     read -p "Type \"yes\" when you _know_ your identity has been added: " answer
     if [ "${answer,,}" = "yes" ]; then
-      ssh -q -o BatchMode=yes $GITUSER@$GITSERVER list > /dev/null
+      eval $sshtest
       check $? "Nope! Still doesn't work. Get it fixed and then re-run this script"
     fi
   fi
@@ -102,18 +104,37 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "Generating GPG keys"
-prompt="Enter passphrase to protect your private key: "
-while IFS= read -p "$prompt" -r -s -n 1 char
-do
+unset password
+unset charcount
+echo -n "Enter passphrase to protect your private key: "
+stty -echo
+charcount=0
+while IFS= read -p "$prompt" -r -s -n 1 char; do
+
+    # Handle ENTER
     if [[ $char == $'\0' ]]; then
         break
     fi
-    prompt='*'
-    password+="$char"
+
+    # Handle Backspace
+    if [[ $char == $'\177' ]]; then
+        if [ $charcount -gt 0 ] ; then
+            charcount=$((charcount-1))
+            prompt=$'\b \b'
+            password="${password%?}"
+        else
+            prompt=''
+        fi
+    else
+        charcount=$((charcount+1))
+        prompt='*'
+        password+="$char"
+    fi
 done
+stty echo
 echo
 
-tmpfile=$RANDOM
+tmpfile=`mktemp`
 cat <<EOF | gpg2 --gen-key --batch > $tmpfile 2>&1
 Key-Type: default
 Subkey-Type: default
