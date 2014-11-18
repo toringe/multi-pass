@@ -70,7 +70,7 @@ EOL
 echo "Add Git identity to .ssh/config"
 fi
 
-sshtest="ssh -q -o PasswordAuthentication=no -o StrictHostKeyChecking=no $GITUSER@$GITSERVER list > /dev/null"
+sshtest="ssh -q -o PreferredAuthentications=publickey -o StrictHostKeyChecking=no $GITUSER@$GITSERVER list > /dev/null"
 
 eval $sshtest
 if [ $? -ne 0 ]; then

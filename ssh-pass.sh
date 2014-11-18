@@ -48,7 +48,7 @@ export DISPLAY=:0
 export SSH_ASKPASS=${SSH_ASKPASS_SCRIPT}
 
 SSH_OPTIONS="-oLogLevel=error"
-#SSH_OPTIONS="${SSH_OPTIONS} -oStrictHostKeyChecking=no"
+SSH_OPTIONS="${SSH_OPTIONS} -oStrictHostKeyChecking=no"
 #SSH_OPTIONS="${SSH_OPTIONS} -oUserKnownHostsFile=/dev/null"
 
 # Execute ssh through setsid and fork to background
