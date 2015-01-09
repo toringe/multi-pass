@@ -17,6 +17,9 @@ if [ "$1" == "--init" ]; then
   INIT=1
 fi
 
+id | grep -qc $SHAREDGROUP
+check $? "User must be a member of group '$SHAREDGROUP'"
+
 default=`getent passwd $USER | cut -d ':' -f 5 | cut -d ',' -f 1`
 read -p "Your full name please [$default]: " realname
 realname=${realname:-$default}
@@ -28,85 +31,21 @@ email=${email:-$default}
 echo "Checking environment"
 test -n $HOME
 check $? "The environment variable HOME is not set"
+cd $HOME
 
 agentcheck=`ps -ef | grep $USER | grep -i [g]pg-agent | wc -l`
 if [ $agentcheck -eq 0 ]; then
   echo "Adding GPG-Agent to your profile"
   cat /usr/local/etc/profile-gpg-addition >> $HOME/.profile
   check $? "Failed to append your profile configuration"
-
-  echo "Reloading profile"
-  . $HOME/.profile
-  check $? "Something when wrong when trying to reload profile"
 else
-  echo "Seems like GPG-Agent is already added to your profile"
+  echo "Seems GPG-Agent is already added to your profile"
 fi
 
-if [ -r $HOME/.ssh/id_git_pass ]; then
-  echo "Identity file for Git already exists"
-else
-  echo "Generating SSH keys for Git-server access"
-  ssh-keygen -b 2048 -t rsa -f $HOME/.ssh/id_git_pass -q -N ""
-  check $? "ssh-keygen failed to generate keys"
-fi
-
-addconfig=0
-test -r $HOME/.ssh/config
-if [ $? -ne 0 ]; then
-  touch $HOME/.ssh/config
-  addconfig=1
-fi
-if [ `grep -c "id_git_pass" $HOME/.ssh/config` -eq 0 ]; then
-  addconfig=1
-fi
-if [ $addconfig -eq 1 ]; then
-cat >> $HOME/.ssh/config <<EOL
-Host $GITSERVER
- HostName $GITSERVER
- User git
- IdentityFile $HOME/.ssh/id_git_pass
- IdentitiesOnly yes
-EOL
-echo "Add Git identity to .ssh/config"
-fi
-
-sshtest="ssh -q -o PreferredAuthentications=publickey -o StrictHostKeyChecking=no $GITUSER@$GITSERVER list > /dev/null"
-
-eval $sshtest
-if [ $? -ne 0 ]; then
-  echo
-  echo " ***********************************************************************"
-  echo
-  echo "  Your systems administrator or any one with full access to:"
-  echo "  $GITUSER@$GITSERVER "
-  echo
-  echo "  have to add your identity file:"
-  echo "  ${HOME}/.ssh/id_git_pass.pub "
-  echo
-  echo "  to the $GITUSER user's ~/.ssh/authorized_keys file"
-  echo
-  echo "  When this has been done, press ENTER to complete the setup."
-  echo
-  echo " ***********************************************************************"
-  read -p ""
-
-  eval $sshtest
-  if [ $? -ne 0 ]; then
-    echo "Your identity has not yet been added to $GITUSER@$GITSERVER"
-    echo "Maybe you hit enter too quickly :)"
-    read -p "Type \"yes\" when you _know_ your identity has been added: " answer
-    if [ "${answer,,}" = "yes" ]; then
-      eval $sshtest
-      check $? "Nope! Still doesn't work. Get it fixed and then re-run this script"
-    fi
-  fi
-
-fi
-
-echo "Generating GPG keys"
 unset password
+unset verify
 unset charcount
-echo -n "Enter passphrase to protect your private key: "
+echo -n "Select passphrase to secure your multi-pass access: "
 stty -echo
 charcount=0
 while IFS= read -p "$prompt" -r -s -n 1 char; do
@@ -133,13 +72,41 @@ while IFS= read -p "$prompt" -r -s -n 1 char; do
 done
 stty echo
 echo
+echo -n "Type it again for verification: "
+stty -echo
+unset prompt
+charcount=0
+while IFS= read -p "$prompt" -r -s -n 1 char; do
 
+    if [[ $char == $'\0' ]]; then
+        break
+    fi
+
+    if [[ $char == $'\177' ]]; then
+        if [ $charcount -gt 0 ] ; then
+            charcount=$((charcount-1))
+            prompt=$'\b \b'
+            verify="${verify%?}"
+        else
+            prompt=''
+        fi
+    else
+        charcount=$((charcount+1))
+        prompt='*'
+        verify+="$char"
+    fi
+done
+stty echo
+echo
+test "$password" = "$verify"
+check $? "The two inputs do not match each other!"
+
+echo "Generating GPG keys (if it hangs, create some more entropy on the server)"
 tmpfile=`mktemp`
 cat <<EOF | gpg2 --gen-key --batch > $tmpfile 2>&1
 Key-Type: default
 Subkey-Type: default
 Name-Real: $realname
-Name-Email: $email
 Expire-Date: 0
 Passphrase: $password
 %commit
@@ -157,21 +124,28 @@ else
 fi
 cd $HOME/.gnupg
 git init
-git config --global core.mergeoptions --no-edit
-git config --global push.default simple
 git config --global user.name "$realname"
 git config --global user.email "$email"
+git config --global core.sharedRepository true
+git config --global push.default current
+git config --global core.mergeoptions --no-edit
 cat <<EOF > .gitignore
 random_seed
 *~
 *.gpg
 .*
 EOF
-git remote add origin $GITUSER@$GITSERVER:$KEYREPO
+git remote add origin file://$GITDIR/$KEYREPO
 if [ $INIT -eq 1 ]; then
   echo "trust-model always" > gpg.conf
   echo "group $PASSNAME=$keyid" >> gpg.conf
+  git add gpg.conf
+  git commit -m "Initial commit"
+  git push origin master
   gpg --export -a > git-pubring.asc
+  git add git-pubring.asc
+  git commit -m "Added key for $realname"
+  git push origin master
 else
   git fetch --all
   git reset --hard origin/master
@@ -179,10 +153,10 @@ else
   check $? "Failed to retrieve common keyring from git"
   gpg --import git-pubring.asc
   gpg --export -a > git-pubring.asc
+  git add git-pubring.asc
+  git commit -m "Added key for $realname"
+  git push origin master
 fi
-git add git-pubring.asc
-git commit -m "Added key for $realname"
-git push origin +master
 
 if [ $INIT -eq 0 ]; then
   echo
@@ -209,7 +183,7 @@ if [ $INIT -eq 0 ]; then
       git fetch --all
       git reset --hard origin/master
       grep $keyid gpg.conf
-      check $? "Doh!...ok, do it manually then!"
+      check $? "Doh!...still not found! You'll have to find out whats wrong!"
     fi
   fi
 fi
@@ -218,17 +192,31 @@ cd ..
 if [ $INIT -eq 1 ]; then
   echo "Initializing password store"
 else
-  echo "Syncronizing password store"
+  echo "Synchronizing password store"
 fi
+source $HOME/.profile
 pass init $PASSNAME
 pass git init
-pass git remote add origin $GITUSER@$GITSERVER:$PASSREPO
+pass git remote add origin file://$GITDIR/$PASSREPO
 if [ $INIT -eq 1 ]; then
- pass git push --set-upstream origin +master
+ pass generate .init 1 > /dev/null 2>&1
+ pass git push origin master
 else 
   pass git pull --no-edit origin master
-  pass git branch --set-upstream-to=origin/master master
+  pass git branch origin master
 fi
-echo "All done!"
 
+if $AUTOSYNC; then
+  echo "Enabling synchronization at login and logout"
+  echo -e "# Run pass-sync on login\npass-sync" >> $HOME/.profile
+  echo -e "# Run pass-sync on logout\npass-sync" >> $HOME/.bash_logout
+fi 
 
+echo
+echo " ***********************************************************************"
+echo
+echo "  Please log out and then in again to get gpg-agent running properly.   "
+echo "  Alternatively re-source your profile manually.                        "
+echo 
+echo " ***********************************************************************"
+echo
