@@ -16,11 +16,6 @@ You can install `pass` from the Ubuntu repositories, but it's a bit outdated. Th
     cd password-store*
     sudo make install
 
-You'll need a git server that will host the common GPG keyring and the common password-store. If you don't have an existing git server you can use, I've included basic documentation [below][2]. 
-
-
-Once the git server is configured, you're ready to install the multi-user scripts.
-
 
 Installation
 ------------
@@ -30,7 +25,7 @@ Installation
 
 Edit the `pass.conf` configuration file if you don't like the default settings. You need to change this if you want to use a remote git server. When you're finished, start the installation script:
 
-    ./install.sh
+    sudo ./install.sh
 
 If no errors appeared, you're done! You may need to re-login to your account to activate gpg-agent and bash completion.
 
@@ -38,22 +33,22 @@ If no errors appeared, you're done! You may need to re-login to your account to 
 First user initialization
 -------------------------
 
-The first user has to initialize the password store and some other init stuff. So this user has to run:
+The first user has to initialize the password store and do some other first time stuff:
 
     pass-new-user --init
 
-The script will pause, then you, or someone with access, will need to add your ssh identity file to the `authorized_keys` file of the user running the git repository, so that you can push changes without having to enter your ssh password. When this has been done, the initial user need to press ENTER to continue the installation. The next and final step is to enter your own personal password that will be used to get access to the common password-store. 
+The script is quite verbose du to all the git action, but errors should be easy to spot. To complete the initialization, you should log out and then in again, to make sure the gpg-agent is started properly and that synchronization has been completed. If you have disabled the `AUTOSYNC` in `pass.conf`, you'll have to manually run `pass-sync`.
 
-NB! On idle servers, especially virtual ones, it may take considerable time to get enough entropy for the GPG key generation to complete. If this is the case, you may want to read the section "[Quick fix to increase entropy][3]" at the end of this document. Don't terminate the key generation, just open a new terminal and follow the quick fix steps.
+NB! On idle servers, especially virtual ones, it may take considerable time to get enough entropy for the GPG key generation to complete. If this is the case, you may want to read the section "[Quick fix to increase entropy][2]" at the end of this document. Don't terminate the key generation, just open a new terminal and follow the quick fix steps.
 
-Before any more users are added, you should populate the password-store with at least one entry. A new password can easily be generated:
+Now the store is ready to be populated with new entries:
 
     pass generate <hostname> <num>
 
-Where `hostname` obviously is the hostname of the server you want to generate a common password. The `num` argument is a integer specifying the length of the password (number of characters). Once an entry has been made, sync the password store by executing:
+Where `hostname` obviously is the hostname of the server you want to generate a common password. The `num` argument is an integer specifying the length of the password (number of characters). Once an entry has been made, sync the password store by manually running
 
     pass-sync
- 
+
 
 Normal usage
 ------------
@@ -62,7 +57,7 @@ When a new user (after the initial user) wants to join the common password store
 
     pass-new-user
 
-Then, this script will pause, when the user's identity has to be added to the git server. This has to be done by someone with write permission to the git user's `authorized_keys` file. After the identity has been added, and the user has pressed ENTER, the user sets the password he/she wants to used to access the password store. The script will once again pause as an authorized user has to accept the new user by executing:
+After the user has set the password he/she wants to used to access the password store, the script will pause as an authorized user has to accept the new user by executing:
 
     pass-accept-user
 
@@ -81,36 +76,6 @@ In this setting, where you use the password store for passwords of different rem
 Type in your gpg password once (given that gpg-agent is working as it should) and it will use the long and awkward password stored without you even noticing it.
 
 
-Setting up a local git server
------------------------------
-
-If you don't happen to have an existing git server, here is the basic documentation for getting a git server up and running on the same machine as you install multi-pass.
-
-    sudo adduser --shell $(which git-shell) --gecos '' --disabled-password git
-    sudo mkdir -p /home/git/.ssh
-    sudo touch /home/git/.ssh/authorized_keys
-    sudo cp -r /usr/share/doc/git/contrib/git-shell-commands /home/git/
-    sudo chmod 750 /home/git/git-shell-commands/*
-    sudo chmod 700 /home/git/.ssh
-    sudo chmod 600 /home/git/.ssh/authorized_keys
-    sudo chown -R git:git /home/git/
-
-Then we initialze the repos we need. Here I'm using the default values from `pass.conf`.
-
-    sudo -u git mkdir -p /home/git/repo/keyring.git /home/git/repo/pass-store.git
-    sudo -u git git --git-dir=/home/git/repo/keyring.git/ init --bare
-    sudo -u git git --git-dir=/home/git/repo/pass-store.git/ init --bare
-
-Add your identity to git's `authorized_keys` file:
-
-    cat $HOME/.ssh/id_rsa.pub | sudo tee -a /home/git/.ssh/authorized_keys
-
-If everything works, the following command should output a listing of the two repos you created:
-
-    ssh git@localhost list
-    repo/keyring.git
-    repo/pass-store.git
-
 Quick fix to increase entropy
 -----------------------------
 
@@ -124,5 +89,4 @@ If you are less conserned about the insecurity of using poor randomness, the qui
 And voila!, lots of poorly pseudo random bytes to choose from. But hey, it works!
 
 [1]: http://www.passwordstore.org/
-[2]: https://github.com/toringe/multi-pass#setting-up-a-local-git-server
-[3]: https://github.com/toringe/multi-pass#quick-fix-to-increase-entropy
+[2]: https://github.com/toringe/multi-pass#quick-fix-to-increase-entropy
