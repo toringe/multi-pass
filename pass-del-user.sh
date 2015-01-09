@@ -11,6 +11,8 @@
 . /usr/local/etc/pass.conf
 . /usr/local/bin/pass-common-func.sh
 
+cd $HOME
+
 authorized "remove user"
 
 read -p "Key ID of user to be removed: " keyid
@@ -30,11 +32,6 @@ fi
 
 pass-sync
 
-echo "Removing entry in authorized_keys for Git"
-username=`gpg --list-keys --with-colons $keyid | grep pub | cut -d: -f10 | cut -d\< -f2 | cut -d@ -f1`
-line=`sudo grep -n $username /home/git/.ssh/authorized_keys | cut -d: -f1`
-sudo sed -i.bak -e "${line}d" /home/git/.ssh/authorized_keys
-
 echo "Removing GPG key ($keyid) from keyring"
 gpg --delete-keys --batch --yes $keyid
 
@@ -47,7 +44,7 @@ gpg --export -a > git-pubring.asc
 git add git-pubring.asc gpg.conf
 git commit -m "Removed key ($keyid)"
 git push origin master
-check $? "Something went wrong when pushing changes to git server"
+check $? "Something went wrong when pushing changes to the git repo"
 cd ..
 
 echo "Re-encrypting password store"

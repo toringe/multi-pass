@@ -11,15 +11,18 @@
 . /usr/local/etc/pass.conf
 . /usr/local/bin/pass-common-func.sh
 
+cd $HOME
+
 authorized "add user"
 
 cd $HOME/.gnupg
 git pull origin master
+
 import=`gpg --import git-pubring.asc 2>&1 | grep 'imported$'`
 newid=`echo "$import" | grep -oP '(?<=gpg: key\s)\w+'`
 newuser=`echo "$import" | cut -d\" -f2`
 test -n $newid
-check $? "Unable to determine ID of new key. Try to run the following manually: gpg --import git-pubring.asc"
+check $? "Unable to determine ID of new key"
 
 echo
 echo "--------------------------------------------------------------------------"
