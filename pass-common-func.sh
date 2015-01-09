@@ -6,10 +6,10 @@
 #                                                                              #
 ################################################################################
 
-# Print message ($2) if exit code ($1) is not zero
+# Print message ($2) if exit code ($1) is not zero.
 function check {
   if [ $1 -ne 0 ]; then
-    echo "$2" 1>&2;
+    echo "$2" 1>&2
     exit 1
   fi
 }
@@ -17,8 +17,14 @@ function check {
 # Check if password-store is encrypted with current user public key
 # Which means user is authorized to accept and delete other users and sync
 function authorized {
+  DEBUG=false
+  if [ "$2" = true ]; then
+    DEBUG=true
+  fi
+  if $DEBUG; then echo "Authorization check"; fi
   prefix="Not authorized to $1"
   myid=`gpg --list-secret-keys | grep ssb | cut -d/ -f2 | cut -d" " -f1`
+  if $DEBUG; then echo "My ID: $myid"; fi
   test -n "$myid"
   check $? "$prefix (Couldn't determine your key id)"
   test -d $HOME/.password-store
@@ -28,5 +34,6 @@ function authorized {
   check $? "$prefix (Unable to read file: $afile)"
   gpg --batch $afile 2>&1 | grep "encrypted with" | grep -q $myid
   check $? "$prefix (Store doesn't contain your key)"
+  if $DEBUG; then echo "Authorization OK"; fi
 }
 
