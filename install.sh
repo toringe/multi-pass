@@ -35,8 +35,7 @@ check $? "Missing GPG-Agent. Run: sudo apt-get install gnupg-agent"
 which git > /dev/null
 check $? "Missing Git. Run: sudo apt-get install git"
 
-gitver=`git --version | cut -d" " -f3 | cut -d. -f1,2`
-test `echo "$gitver>=1.9" | bc` -ne 0
+git --version | cut -d" " -f3 | cut -d. -f1,2 | awk '{if($1>="1.9") exit 0; else exit 1}'
 check $? "Wrong Git version ($gitver). Requires Git version 1.9 and above"
 
 which ssh > /dev/null
