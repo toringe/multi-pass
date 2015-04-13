@@ -21,7 +21,7 @@ fi
 # Get hostname from input arguments
 HOST=$1
 
-# Determine to override USER 
+# Check for USER overrides
 if [ `pass ${HOST} | grep -ic "user="` -eq 1 ]; then
   # USER specified as option in pass store entry
   USER=`pass ${HOST} | grep -i "user=" | cut -d= -f2`
@@ -29,6 +29,18 @@ elif [ -n "$SSHUSER" ]; then
   # USER specified in pass.conf
   USER=$SSHUSER
 fi
+
+# Check for SSH OPTIONS overrides
+if [ `pass ${HOST} | grep -ic "options="` -eq 1 ]; then
+    # Use options from pass store entry
+    optstr=`pass ${HOST} | grep -i "options=" | sed 's/options=//'`
+else
+    # Use options as defined in pass.conf
+    optstr=`echo ${SSHOPTIONS} | sed 's/SSHOPTIONS=//;s/"//g'`
+fi
+for opt in $(echo $optstr | tr ';' '\n'); do
+    SSH_OPTIONS="${SSH_OPTIONS} -o $opt"
+done
 
 # Get password for host
 PASS=`pass ${HOST} | head -n 1`
@@ -47,9 +59,14 @@ export DISPLAY=:0
 
 export SSH_ASKPASS=${SSH_ASKPASS_SCRIPT}
 
-SSH_OPTIONS="-oLogLevel=error"
-SSH_OPTIONS="${SSH_OPTIONS} -oStrictHostKeyChecking=no"
-#SSH_OPTIONS="${SSH_OPTIONS} -oUserKnownHostsFile=/dev/null"
+# Log connection attempt and options used to auth.log
+logger -p auth.info "ssh-pass ${USER}@${HOST} (Connection attempt)"
+if [ -n "$optstr" ]; then
+    logger -p auth.info "ssh-pass using options: ${optstr}"
+fi
 
 # Execute ssh through setsid and fork to background
 setsid ssh ${SSH_OPTIONS} ${USER}@${HOST} 
+
+# Log connection termination to auth.log
+logger -p auth.info "ssh-pass ${USER}@${HOST} (Connection closed)"
