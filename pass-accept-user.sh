@@ -21,7 +21,7 @@ git pull origin master
 import=`gpg --import git-pubring.asc 2>&1 | grep 'imported$'`
 newid=`echo "$import" | grep -oP '(?<=gpg: key\s)\w+'`
 newuser=`echo "$import" | cut -d\" -f2`
-test -n $newid
+test -n "$newid"
 check $? "Unable to determine ID of new key"
 
 echo
