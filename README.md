@@ -37,7 +37,7 @@ The first user has to initialize the password store and do some other first time
 
     pass-new-user --init
 
-The script is quite verbose du to all the git action, but errors should be easy to spot. To complete the initialization, you should log out and then in again, to make sure the gpg-agent is started properly and that synchronization has been completed. If you have disabled the `AUTOSYNC` in `pass.conf`, you'll have to manually run `pass-sync`.
+The script is quite verbose due to all the git action, but errors should be easy to spot. To complete the initialization, you should log out and then in again, to make sure the gpg-agent is started properly and that synchronization has been completed. If you have disabled the `AUTOSYNC` in `pass.conf`, you'll have to manually run `pass-sync`.
 
 NB! On idle servers, especially virtual ones, it may take considerable time to get enough entropy for the GPG key generation to complete. If this is the case, you may want to read the section "[Quick fix to increase entropy][2]" at the end of this document. Don't terminate the key generation, just open a new terminal and follow the quick fix steps.
 
